@@ -6,8 +6,5 @@ namespace NotesApi.Models
     {
         public string FullName { get; set; } = string.Empty;
     }
-    public class ApplicationRole : MongoRole
-    {
-        // Optional
-    }
+   
 }

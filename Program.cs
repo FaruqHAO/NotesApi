@@ -6,27 +6,27 @@ using AspNetCore.Identity.Mongo.Model;
 using NotesApi.Models;
 using NotesApi.Services;
 using Microsoft.OpenApi.Models;
-
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Swagger & Controllers
+// Enable controllers and Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
-// ✅ Configure MongoDB settings
+// ✅ MongoDB settings from environment
+var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
 builder.Services.Configure<MongoDBSettings>(
     builder.Configuration.GetSection("MongoDBSettings"));
+builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
 
-var connectionString = Environment.GetEnvironmentVariable("MONGO_URL") ?? "mongodb://localhost:27017";
-
-// ✅ Register your services
+// ✅ Register application services
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<NotesService>();
 
-// ✅ Configure Identity for MongoDB
-builder.Services.AddIdentityMongoDbProvider<ApplicationUser, ApplicationRole>(identityOptions =>
+// ✅ MongoDB Identity setup using env variable
+builder.Services.AddIdentityMongoDbProvider<ApplicationUser>(identityOptions =>
 {
     identityOptions.Password.RequireDigit = false;
     identityOptions.Password.RequireLowercase = false;
@@ -36,10 +36,10 @@ builder.Services.AddIdentityMongoDbProvider<ApplicationUser, ApplicationRole>(id
 },
 mongoIdentityOptions =>
 {
-    mongoIdentityOptions.ConnectionString = builder.Configuration.GetConnectionString("MongoConnection");
+    mongoIdentityOptions.ConnectionString = mongoConnectionString;
 });
 
-// ✅ Configure JWT authentication
+// ✅ JWT Authentication configuration using env vars
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -54,18 +54,17 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        
         ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
     };
 });
 
+// ✅ Swagger with JWT support
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "NotesApi", Version = "v1" });
 
-    // Add JWT Authentication to Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
@@ -75,7 +74,6 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer"
     });
 
-    // Add security requirement for the API
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -92,30 +90,31 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// ✅ CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins",
-        builder => builder.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
+        policy => policy.AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader());
 });
-
 
 var app = builder.Build();
 
-// Swagger in dev
+// ✅ Use Swagger only in development
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
+    app.UseHttpsRedirection(); // enable only locally
 }
+
+// ✅ Middleware
 app.UseCors("AllowAllOrigins");
-
-
-app.UseHttpsRedirection();
-app.UseAuthentication(); // This should be before UseAuthorization
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+// ✅ Bind to Render-assigned port
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Run($"http://0.0.0.0:{port}");
