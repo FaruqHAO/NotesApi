@@ -20,10 +20,17 @@ namespace NotesApi.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Note>>> Get()
         {
-            var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value.ToString();
+            var userId = User.FindFirst("sub")?.Value;
+
+            Console.WriteLine("🔍 Claims:");
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"👉 {claim.Type} = {claim.Value}");
+            }
 
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User ID is missing in token test to see againss."+ userId);
+                return Unauthorized("❌ User ID is missing in token. Claims debug above.");
+
 
             var notes = await _notesService.GetByUserIdAsync(userId);
             return Ok(notes);
