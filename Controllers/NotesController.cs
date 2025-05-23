@@ -23,7 +23,7 @@ namespace NotesApi.Controllers
             var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
 
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("User ID is missing in token.");
+                return Unauthorized("User ID is missing in token."+User.FindFirst(JwtRegisteredClaimNames.Sub));
 
             var notes = await _notesService.GetByUserIdAsync(userId);
             return Ok(notes);
