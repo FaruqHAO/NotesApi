@@ -20,7 +20,8 @@ namespace NotesApi.Controllers
         [HttpGet]
         public async Task<ActionResult<List<Note>>> Get()
         {
-            var userId = User.FindFirst("sub")?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
 
             Console.WriteLine("🔍 Claims:");
             foreach (var claim in User.Claims)
@@ -39,7 +40,7 @@ namespace NotesApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Note>> Get(string id)
         {
-            var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var note = await _notesService.GetAsync(id);
             if (note is null || note.UserId != userId)
@@ -51,7 +52,7 @@ namespace NotesApi.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] CreateNoteDto dto)
         {
-            var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("User ID is missing in token.");
@@ -70,7 +71,7 @@ namespace NotesApi.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(string id, Note updatedNote)
         {
-            var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var note = await _notesService.GetAsync(id);
             if (note is null || note.UserId != userId)
@@ -86,7 +87,7 @@ namespace NotesApi.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
         {
-            var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var note = await _notesService.GetAsync(id);
             if (note is null || note.UserId != userId)
