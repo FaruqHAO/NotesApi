@@ -16,7 +16,9 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
 // ✅ MongoDB settings from environment
-var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING");
+var mongoConnectionString = builder.Configuration["MongoDBSettings:ConnectionString"]
+    ?? throw new InvalidOperationException("MongoDB connection string is not configured.");
+
 builder.Services.Configure<MongoDBSettings>(
     builder.Configuration.GetSection("MongoDBSettings"));
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionString));
