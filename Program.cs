@@ -19,6 +19,8 @@ builder.Services.AddControllers();
 builder.Services.Configure<MongoDBSettings>(
     builder.Configuration.GetSection("MongoDBSettings"));
 
+var connectionString = Environment.GetEnvironmentVariable("MONGO_URL") ?? "mongodb://localhost:27017";
+
 // ✅ Register your services
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<NotesService>();
@@ -106,6 +108,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
 }
 app.UseCors("AllowAllOrigins");
 
