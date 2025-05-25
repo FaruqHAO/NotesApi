@@ -27,6 +27,8 @@ builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoConnectionStrin
 builder.Services.AddSingleton<UserService>();
 builder.Services.AddSingleton<NotesService>();
 
+
+
 // ✅ MongoDB Identity setup using env variable
 builder.Services.AddIdentityMongoDbProvider<ApplicationUser>(identityOptions =>
 {
@@ -75,6 +77,7 @@ builder.Services.AddSwaggerGen(c =>
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
+
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement

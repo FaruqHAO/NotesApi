@@ -45,7 +45,7 @@ namespace NotesApi.Controllers
             var note = await _notesService.GetAsync(id);
             if (note is null || note.UserId != userId)
                 return NotFound("Note not found or not authorized.");
-
+                    
             return Ok(note);
         }
 
