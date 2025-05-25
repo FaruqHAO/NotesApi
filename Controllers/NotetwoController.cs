@@ -5,6 +5,9 @@ using System.Security.Claims;
 
 namespace NotesApi.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
+
     public class NotetwoController : Controller
     {
       
