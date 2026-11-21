@@ -1,28 +1,27 @@
-# Deploy NotesApi
+# Deploy NotesApi with an existing Dokploy MongoDB
 
-Create a Docker Compose service in Dokploy, select FaruqHAO/NotesApi,
-branch `master`, repository root build path and `compose.dokploy.yml`.
-Use Compose mode, not Stack. MongoDB is included and has no public port.
+Create a Docker Compose service using FaruqHAO/NotesApi, branch master,
+Compose file compose.dokploy.yml, and repository root build path.
+Use Compose mode, not Stack.
 
-Generate a secret on Ubuntu with `openssl rand -hex 32`. Save in Dokploy Environment:
-
+In Dokploy Environment set:
 ```dotenv
-JWT_KEY=replace-with-the-generated-key
+JWT_KEY=replace-with-output-of-openssl-rand-hex-32
+MongoDBSettings__ConnectionString=mongodb://USER:PASSWORD@INTERNAL_HOST:27017/NotesDB?authSource=admin&directConnection=true
+MongoDBSettings__DatabaseName=NotesDB
 ```
 
-Add a Dokploy domain: `notes.baosat.dpdns.org`, service `api`, port `8080`,
-path `/`, HTTPS disabled for the HTTP tunnel origin. Deploy.
-In the existing Cloudflare Tunnel add hostname `notes.baosat.dpdns.org`
-with HTTP service `127.0.0.1:80` (cloudflared runs on the Ubuntu host).
+The database name in the URL must match DatabaseName; Mongo Identity uses the URL.
+Use your existing database name in both places if migrating existing data.
+The MongoDB service must be running and reachable on dokploy-network.
+This file creates only the API; database persistence/backups are managed on the
+existing MongoDB service. Never commit real credentials.
 
-Open `https://notes.baosat.dpdns.org/swagger/index.html`.
-Register using POST /api/Auth/register, log in with POST /api/Auth/login,
-then click Authorize and enter `Bearer YOUR_TOKEN` to call /api/Notes.
-`GET /health` is an unauthenticated liveness check, not a database readiness check.
+Add domain notes.baosat.dpdns.org, service api, port 8080, path /,
+HTTPS off for the HTTP Cloudflare tunnel origin.
+Cloudflare published hostname: notes.baosat.dpdns.org -> http://127.0.0.1:80.
+Save and deploy.
 
-The named mongo-data volume persists through redeployment. Back it up separately.
-Restart policies restart containers after Docker starts; enable VM start-at-boot in
-Proxmox and Docker/cloudflared services on Ubuntu. Reboots still cause downtime.
-
-Both notes controllers require JWT authentication and use the authenticated user ID.
-Changing JWT_KEY invalidates existing tokens. No PostgreSQL or Redis is required.
+Swagger: https://notes.baosat.dpdns.org/swagger/index.html
+Register, log in, then Authorize using Bearer YOUR_TOKEN.
+GET /health is liveness only, not a database connectivity check.
