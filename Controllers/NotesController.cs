@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NotesApi.Models;
 using NotesApi.Services;
@@ -23,14 +23,8 @@ namespace NotesApi.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
 
-            Console.WriteLine("🔍 Claims:");
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"👉 {claim.Type} = {claim.Value}");
-            }
-
             if (string.IsNullOrEmpty(userId))
-                return Unauthorized("❌ User ID is missing in token. Claims debug above.");
+                return Unauthorized("User ID is missing in token.");
 
 
             var notes = await _notesService.GetByUserIdAsync(userId);

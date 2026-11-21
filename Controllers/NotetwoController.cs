@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using NotesApi.Models;
 using NotesApi.Services;
 using System.Security.Claims;
 
 namespace NotesApi.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
 
@@ -22,14 +24,8 @@ namespace NotesApi.Controllers
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
 
-                Console.WriteLine("🔍 Claims:");
-                foreach (var claim in User.Claims)
-                {
-                    Console.WriteLine($"👉 {claim.Type} = {claim.Value}");
-                }
-
                 if (string.IsNullOrEmpty(userId))
-                    return Unauthorized("❌ User ID is missing in token. Claims debug above.");
+                    return Unauthorized("User ID is missing in token.");
 
 
                 var notes = await _notesService.GetByUserIdAsync(userId);
@@ -39,10 +35,12 @@ namespace NotesApi.Controllers
             [HttpGet("{id},{usersid}")]
             public async Task<ActionResult<Note>> Get(string id,string usersid)
             {
-               // var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+               var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId) || userId != usersid)
+                    return Forbid();
 
                 var note = await _notesService.GetAsync(id);
-                if (note is null || note.UserId != usersid)
+                if (note is null || note.UserId != userId)
                     return NotFound("Note not found or not authorized.");
 
                 return Ok(note);

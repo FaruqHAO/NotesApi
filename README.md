@@ -47,3 +47,9 @@ Example endpoints:
 ```bash
 git clone https://github.com/FaruqHAO/NoteAPI.git
 cd NoteAPI
+
+## Dokploy / home server
+
+See [DOKPLOY.md](DOKPLOY.md) for the Compose deployment, MongoDB persistence,
+JWT environment variable and Cloudflare hostname setup. The implementation uses
+MongoDB (the PostgreSQL references above are outdated).

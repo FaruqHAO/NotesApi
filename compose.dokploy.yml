@@ -1,0 +1,36 @@
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      PORT: "8080"
+      MongoDBSettings__ConnectionString: mongodb://mongo:27017/NotesDB
+      MongoDBSettings__DatabaseName: NotesDB
+      MongoDBSettings__NotesCollectionName: Notes
+      Jwt__Key: ${JWT_KEY:?Set JWT_KEY in Dokploy Environment}
+      Jwt__Issuer: https://notes.baosat.dpdns.org
+      Jwt__Audience: https://notes.baosat.dpdns.org
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks: [backend, dokploy-network]
+    labels:
+      - traefik.docker.network=dokploy-network
+networks:
+  backend:
+  dokploy-network:
+    external: true
+volumes:
+  mongo-data:
